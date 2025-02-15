@@ -1,3 +1,78 @@
-mkdir components
-nano components/SavingsCalculator.js
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
+export default function SavingsCalculator() {
+  const [currentAge, setCurrentAge] = useState(0);
+  const [retirementAge, setRetirementAge] = useState(0);
+  const [monthlySavings, setMonthlySavings] = useState(null);
+  const [calculationDetails, setCalculationDetails] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const calculateSavings = () => {
+    if (!currentAge || !retirementAge || retirementAge <= currentAge) {
+      setErrorMessage("Por favor, insira uma idade atual e uma idade de aposentadoria válida.");
+      setMonthlySavings(null);
+      setCalculationDetails("");
+      return;
+    }
+    
+    setErrorMessage("");
+    let years = retirementAge - currentAge;
+    let months = years * 12;
+    let rate = 0.008; // 0.8% ao mês
+    let futureValue = 1000000; // Objetivo de 1 milhão
+    
+    let monthlyContribution = (futureValue * rate) / (Math.pow(1 + rate, months) - 1);
+    setMonthlySavings(monthlyContribution.toFixed(2).replace(".", ","));
+
+    setCalculationDetails(
+      `Você tem <strong>${months}</strong> meses até sua aposentadoria.<br/>` +
+      `Usamos a taxa de atualização dos investimentos de <strong>0,8%</strong> ao mês.<br/><br/>` +
+      `💡 Para chegar no seu primeiro milhão, você deve investir <strong>R$ ${monthlyContribution.toFixed(2).replace(".", ",")}</strong> todo o mês.`
+    );
+  };
+
+  return (
+    <div className="flex flex-col items-center gap-6 p-8 min-h-screen bg-gray-100 select-none pointer-events-none">
+      <h1 className="text-3xl font-bold text-blue-600">Calculadora Rumo ao Milhão</h1>
+      <Card className="p-6 w-full max-w-md shadow-lg rounded-xl bg-white">
+        <CardContent className="flex flex-col gap-5 pointer-events-auto">
+          <Input 
+            type="number" 
+            placeholder="Idade Atual" 
+            className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            onChange={(e) => setCurrentAge(parseFloat(e.target.value) || 0)} 
+          />
+          <Input 
+            type="number" 
+            placeholder="Idade de Aposentadoria" 
+            className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            onChange={(e) => setRetirementAge(parseFloat(e.target.value) || 0)} 
+          />
+          {errorMessage && (
+            <div className="text-sm text-red-600 text-center bg-red-100 p-3 rounded-lg shadow">
+              {errorMessage}
+            </div>
+          )}
+          <Button 
+            className="p-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-200"
+            onClick={calculateSavings}>
+            Calcular
+          </Button>
+          {monthlySavings && (
+            <div className="text-base font-medium text-center bg-green-100 p-3 rounded-lg shadow flex justify-center items-center">
+              <span>Aporte Mensal Necessário:</span>
+              <span className="text-green-700 font-semibold ml-2">R$ {monthlySavings}</span>
+            </div>
+          )}
+          {calculationDetails && (
+            <div className="text-sm text-gray-700 text-center bg-gray-200 p-3 rounded-lg shadow whitespace-pre-line" dangerouslySetInnerHTML={{ __html: calculationDetails }}>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
